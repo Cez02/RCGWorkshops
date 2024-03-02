@@ -6,9 +6,14 @@ namespace CandlelightRTC {
         return m_Transform;
     }
 
-    float &Camera::getNearPlane()
+    float &Camera::getNearPlaneDistance()
     {
-        return m_NearPlane;
+        return m_NearPlaneDistance;
+    }
+
+    float &Camera::getAspectRatio()
+    {
+        return m_AspectRatio;
     }
 
     float &Camera::getMaxRayDistance()
@@ -16,8 +21,9 @@ namespace CandlelightRTC {
         return m_MaxRayDistance;
     }
 
-    Camera::Camera(transform_t transform, float nearPlane, float maxRayDistance)
+    Camera::Camera(transform_t transform, float maxRayDistance)
         : m_Transform(transform)
-        , m_NearPlane(nearPlane)
         , m_MaxRayDistance(maxRayDistance) { }
+
+    Camera::Camera() {}
 }

@@ -4,4 +4,5 @@ target_sources(basicraytracer
         objects.cpp
         camera.cpp
         GLDrawer.cpp
+        logger.cpp
 )

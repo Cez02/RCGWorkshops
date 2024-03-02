@@ -5,4 +5,9 @@ namespace CandlelightRTC {
     {
         return m_Transform;
     }
+
+    MeshPtr &PObject::getMesh()
+    {
+        return m_Mesh;
+    }
 }

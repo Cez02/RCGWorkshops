@@ -4,6 +4,7 @@
 #include <string>
 
 #include "common.hpp"
+#include "logger.hpp"
 
 inline char const *VERTEX_SHADER = R"END(
 #version 330 core
@@ -63,7 +64,7 @@ namespace CandlelightRTC{
         // SETUP SHADER PROGRAM
         unsigned int vertex, fragment;
 
-        std::cout << "[LOG] \t GLDrawer - Compiling vertex shader" << std::endl;
+        CandlelightRTC::LogInfo("Compiling vertex shader");
 
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -71,7 +72,7 @@ namespace CandlelightRTC{
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
 
-        std::cout << "[LOG] \t GLDrawer - Compiling fragment shader" << std::endl;
+        CandlelightRTC::LogInfo("Compiling fragment shader");
 
         // fragment Shader
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -79,7 +80,7 @@ namespace CandlelightRTC{
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
 
-        std::cout << "[LOG] \t GLDrawer - Compiling shader program" << std::endl;
+        CandlelightRTC::LogInfo("Compiling shader program");
 
         // shader Program
         m_ShaderProgram = glCreateProgram();
@@ -92,7 +93,7 @@ namespace CandlelightRTC{
         glDeleteShader(vertex);
         glDeleteShader(fragment);
 
-        std::cout << "[LOG] \t GLDrawer - Setting up basic square" << std::endl;
+        CandlelightRTC::LogInfo("Setting up texture geometry");
 
         float vertices[] = {
             // positions          // texture coords
@@ -105,13 +106,12 @@ namespace CandlelightRTC{
             -1.0f, -1.0f, 0.0f,    0.0f, 0.0f, // bottom left
         };
 
-        unsigned int VBO;
         glGenVertexArrays(1, &m_VAO);
-        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &m_VBO);
 
         glBindVertexArray(m_VAO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
         // position attribute
@@ -121,7 +121,7 @@ namespace CandlelightRTC{
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
-        std::cout << "[LOG] \t GLDrawer - Setting up canvas" << std::endl;
+        CandlelightRTC::LogInfo("Setting up texture canvas");
 
         // setup canvas
         glGenTextures(1, &m_CanvasTexture);
@@ -138,20 +138,17 @@ namespace CandlelightRTC{
 
         GLubyte *data = new GLubyte[canvasHeight * canvasWidth * 4];
 
-        for(int i = 0; i<canvasHeight; i++){
-            for(int j = 0; j<canvasWidth; j++){
-                data[(j + canvasHeight * i)*4] = 100;
-                data[(j + canvasHeight * i)*4 + 1] = 100;
-                data[(j + canvasHeight * i)*4 + 2] = 100;
-                // data[(j + canvasHeight * i)*4] = 255;
-            }
-        }
-
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, canvasWidth, canvasHeight, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, NULL);
 
         glUniform1i(glGetUniformLocation(m_ShaderProgram, "Canvas"), 0);        
 
+    }
+
+    void GLDrawer::Release()
+    {
+        glDeleteVertexArrays(1, &m_VAO);
+        glDeleteBuffers(1, &m_VBO);
     }
 
     void GLDrawer::SetCanvasPixel(GLuint x, GLuint y, glm::vec3 color)
