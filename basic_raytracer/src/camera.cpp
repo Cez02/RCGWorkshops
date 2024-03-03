@@ -25,5 +25,5 @@ namespace CandlelightRTC {
         : m_Transform(transform)
         , m_MaxRayDistance(maxRayDistance) { }
 
-    Camera::Camera() {}
+    Camera::Camera() { }
 }

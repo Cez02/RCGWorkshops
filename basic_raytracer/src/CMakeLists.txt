@@ -3,6 +3,8 @@ target_sources(basicraytracer
         main.cpp
         objects.cpp
         camera.cpp
+        scene.cpp
+        mesh.cpp
         GLDrawer.cpp
         logger.cpp
 )

@@ -2,7 +2,10 @@
 
 #include <vector>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include "logger.hpp"
 
 namespace CandlelightRTC {
     floatPtr &Mesh::getVertices()
@@ -24,7 +27,39 @@ namespace CandlelightRTC {
 
     std::shared_ptr<Mesh> Mesh::getSphereMesh(RTCDevice &device)
     {
+        if(SPHERE_MESH != nullptr)
+            return SPHERE_MESH;
+
         SPHERE_MESH = std::make_shared<Mesh>();
+
+
+        SPHERE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+
+        SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
+            RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), 1);
+
+        SPHERE_MESH->getIndices()[0] = 0;
+        SPHERE_MESH->getIndices()[1] = 1;
+        SPHERE_MESH->getIndices()[2] = 2;
+
+        SPHERE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
+            RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), 3);
+        SPHERE_MESH->getVertices()[0] = -1;
+        SPHERE_MESH->getVertices()[1] = -1;
+        SPHERE_MESH->getVertices()[2] = 5;
+
+        SPHERE_MESH->getVertices()[3] = 0;
+        SPHERE_MESH->getVertices()[4] = 1;
+        SPHERE_MESH->getVertices()[5] = 5;
+
+        SPHERE_MESH->getVertices()[6] = 1;
+        SPHERE_MESH->getVertices()[7] = -1;
+        SPHERE_MESH->getVertices()[8] = 5;
+
+        rtcCommitGeometry(SPHERE_MESH->getRTCGeometry());
+
+        return SPHERE_MESH;
+
 
         int parallels = 50;
         int meridians = 50;
@@ -65,6 +100,13 @@ namespace CandlelightRTC {
             }
         }
 
+        for(int i = 2; i<verts.size(); i += 3)
+            verts[i] += 5;
+
+        for(int i = 0; i<verts.size(); i += 3){
+            LogInfo("Vertex " + std::to_string(i) + ": " + std::to_string(verts[i]) + " " + std::to_string(verts[i + 1]) + " " + std::to_string(verts[i + 2]));
+        }
+
         int k1, k2;
         for(int i = 0; i < stackCount; ++i)
         {
@@ -92,6 +134,8 @@ namespace CandlelightRTC {
             }
         }
 
+        CandlelightRTC::LogInfo("Creating embree geometry...");
+
         SPHERE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
         SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
@@ -102,6 +146,13 @@ namespace CandlelightRTC {
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
         memcpy(SPHERE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
 
+        for(int i = 0; i<verts.size(); i += 3){
+            LogInfo("Vertex " + std::to_string(i) + ": " + std::to_string(SPHERE_MESH->getVertices()[i]) + " " + std::to_string(SPHERE_MESH->getVertices()[i + 1]) + " " + std::to_string(SPHERE_MESH->getVertices()[i + 2]));
+        }
+
         rtcCommitGeometry(SPHERE_MESH->getRTCGeometry());
+
+        return SPHERE_MESH;
+
     }
 }

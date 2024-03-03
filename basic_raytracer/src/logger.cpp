@@ -11,17 +11,17 @@ namespace CandlelightRTC{
     }
 
     void LogInfo(std::string message){
-        std::cout << "[LOG | " << std::setw(10) << getSecondsSinceStart();
+        std::cout << "[LOG     | " << std::setw(7) << getSecondsSinceStart();
         std::cout << "] " << message << std::endl;
     }
 
     void LogError(std::string message){
-        std::cout << "\033[1;31m" << "[ERROR | " << std::setw(10) << getSecondsSinceStart();
+        std::cout << "\033[1;31m" << "[ERROR   | " << std::setw(7) << getSecondsSinceStart();
         std::cout << "] " << message << "\033[0m" << std::endl;
     }
 
     void LogWarning(std::string message){
-        std::cout << "\033[1;33m" << "[WARNING | " << std::setw(10) << getSecondsSinceStart();
+        std::cout << "\033[1;33m" << "[WARNING | " << std::setw(7) << getSecondsSinceStart();
         std::cout << "] " << message << "\033[0m" << std::endl;
 
     }

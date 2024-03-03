@@ -5,6 +5,7 @@
 #include "GLDrawer.hpp"
 #include "objects.hpp"
 #include "logger.hpp"
+#include "scene.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -12,6 +13,11 @@
 
 #define WINDOW_WIDTH 480
 #define WINDOW_HEIGHT 480
+
+void errorFunction(void* userPtr, enum RTCError error, const char* str)
+{
+    CandlelightRTC::LogError(std::to_string(error) + ": " + std::string(str));
+}
 
 int main()
 {
@@ -47,30 +53,32 @@ int main()
 
     
     CandlelightRTC::LogInfo("Initializing drawer");
-    CandlelightRTC::GLDrawer drawer;
+    CandlelightRTC::GLDrawer *drawer = new CandlelightRTC::GLDrawer();
 
-    drawer.Setup(WINDOW_WIDTH, WINDOW_HEIGHT);
+    drawer->Setup(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    // Setup Scene
 
-    // Setup embree
-    RTCDevice device = rtcNewDevice(NULL);
-    RTCScene scene   = rtcNewScene(device);
-    RTCGeometry geom = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+    CandlelightRTC::LogInfo("Setting up scene...");
 
-    float* vb = (float*) rtcSetNewGeometryBuffer(geom,
-        RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), 3);
-    vb[0] = 0.f; vb[1] = 0.f; vb[2] = 0.f; // 1st vertex
-    vb[3] = 1.f; vb[4] = 0.f; vb[5] = 0.f; // 2nd vertex
-    vb[6] = 0.f; vb[7] = 1.f; vb[8] = 0.f; // 3rd vertex
+    RTCDevice device = rtcNewDevice("verbose=3");
+    rtcSetDeviceErrorFunction(device, errorFunction, NULL);
 
-    unsigned* ib = (unsigned*) rtcSetNewGeometryBuffer(geom,
-        RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(unsigned), 1);
-    ib[0] = 0; ib[1] = 1; ib[2] = 2;
+    CandlelightRTC::Scene scene;
 
-    rtcCommitGeometry(geom);
-    rtcAttachGeometry(scene, geom);
-    rtcReleaseGeometry(geom);
-    rtcCommitScene(scene);
+    CandlelightRTC::Camera camera;
+    camera.getAspectRatio() = 1;
+    camera.getMaxRayDistance() = std::numeric_limits<float>::infinity();
+    camera.getNearPlaneDistance() = 1;
+    camera.getTransform() = CandlelightRTC::transform_t(
+        glm::vec3(0, 0, 0),
+        glm::vec3(1, 1, 1),
+        glm::quat(glm::vec3(0, 0, 0))
+    );
+
+    CandlelightRTC::LogInfo("Creating scene object...");
+
+    scene.Setup(device, drawer, camera);
 
     CandlelightRTC::LogInfo("Begin drawing...");
 
@@ -80,7 +88,8 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        drawer.DrawCanvas();
+        //scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
+        drawer->DrawCanvas();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -88,7 +97,7 @@ int main()
 
     CandlelightRTC::LogInfo("Closing...");
 
-    drawer.Release();
+    drawer->Release();
     glfwTerminate();
     return 0;
 }

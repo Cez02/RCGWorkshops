@@ -19,7 +19,7 @@ namespace CandlelightRTC {
         std::vector<PObject> m_ObjectsInScene;
 
     public:
-        void Setup(RTCScene rtcScene, RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
+        void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
         void DrawScene(int screenWidth, int screenHeight);
     };
 }
