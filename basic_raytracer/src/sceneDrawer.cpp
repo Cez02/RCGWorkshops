@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 
+#include "logger.hpp"
+
+#include <thread>
+
 namespace CandlelightRTC {
 
     colorrgba_v_t SceneDrawer::FollowRay(glm::vec3 origin, glm::vec3 direction, int depth)
@@ -41,6 +45,24 @@ namespace CandlelightRTC {
         }
     }
 
+    void SceneDrawer::CalculateSample(int i, int j, int screenWidth, int screenHeight, glm::vec3 origin, colorrgba_v_t *res){
+        glm::vec2 eps = glm::vec2((float)rand() / (float)RAND_MAX - 0.5f, (float)rand() / (float)RAND_MAX - 0.5f) * 0.7f;
+
+        // calculate point position on the near plane
+        glm::vec3 pointPos = glm::vec3(
+            -0.5f + ((float)i + eps.x)  / (float)(screenWidth - 1),
+            (-0.5f + ((float)j + eps.y)  / (float)(screenHeight - 1)) / m_CurrentScene->getCamera().getAspectRatio() ,
+            m_CurrentScene->getCamera().getNearPlaneDistance()
+        );
+
+        pointPos = m_CurrentScene->getCamera().getTransform().toMat4() * glm::vec4(pointPos.x, pointPos.y, pointPos.z, 1.0);
+
+
+        glm::vec3 rayDir = (pointPos - origin);
+
+        *res += FollowRay(origin, rayDir, 3);
+    }
+
     void SceneDrawer::Setup(GLDrawer *drawer)
     {
         m_Drawer = drawer;
@@ -50,41 +72,36 @@ namespace CandlelightRTC {
     {
         m_CurrentScene = scene;
 
-        scene->getCamera().getAspectRatio() = screenWidth / screenHeight;
+        scene->getCamera().getAspectRatio() = (float)screenWidth / (float)screenHeight;
 
-        int sampleCount = 50;        
+        int sampleCount = 1;        
 
         glm::vec3 positionToRenderFrom = scene->getCamera().getTransform().Position;
 
+        std::vector<std::thread> workers;
+
+
+        glm::vec3 color[screenHeight][screenWidth];
+
         for(int i = 0; i<screenWidth; i++){
             for(int j = 0; j<screenHeight; j++){
-                glm::vec3 color = glm::vec3(0, 0, 0);
+                color[j][i] = glm::vec3(0);
 
                 // Cast ray from pos to pixel at near plane
                 for(int sample = 0; sample<sampleCount; sample++){
-
-                    glm::vec2 eps = glm::vec2((float)rand() / (float)RAND_MAX - 0.5f, (float)rand() / (float)RAND_MAX - 0.5f) * 0.7f;
-
-                    // calculate point position on the near plane
-                    glm::vec3 pointPos = glm::vec3(
-                        -0.5f + ((float)i + eps.x)  / (float)(screenWidth - 1),
-                        (-0.5f + ((float)j + eps.y)  / (float)(screenHeight - 1)) / scene->getCamera().getAspectRatio() ,
-                        scene->getCamera().getNearPlaneDistance()
-                    );
-
-                    pointPos = scene->getCamera().getTransform().toMat4() * glm::vec4(pointPos.x, pointPos.y, pointPos.z, 1.0);
-
-
-                    glm::vec3 rayDir = (pointPos - positionToRenderFrom);
-
-                    color += FollowRay(positionToRenderFrom, rayDir, 3);
+                    CalculateSample(i, j, screenWidth, screenHeight, positionToRenderFrom, &(color[j][i]));
                 }
-
-                color = color * (1 / (float)sampleCount);
-
-                m_Drawer->SetCanvasPixel(i, j, color);
             }
         }
 
+
+
+        for(int i = 0; i<screenWidth; i++){
+            for(int j = 0; j<screenHeight; j++){
+                color[j][i] = color[j][i] * (1 / (float)sampleCount);
+
+                m_Drawer->SetCanvasPixel(i, j, color[j][i]);
+            }
+        }
     }
 }

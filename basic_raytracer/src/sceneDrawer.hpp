@@ -14,6 +14,7 @@ namespace CandlelightRTC {
         GLDrawer *m_Drawer;
 
         colorrgba_v_t FollowRay(glm::vec3 origin, glm::vec3 direction, int depth);
+        void CalculateSample(int i, int j, int screenWidth, int screenHeight, glm::vec3 origin, colorrgba_v_t *res);
 
     public:
         void Setup(GLDrawer *drawer);
