@@ -6,6 +6,7 @@
 #include "objects.hpp"
 #include "logger.hpp"
 #include "scene.hpp"
+#include "sceneDrawer.hpp"
 
 #include <GLFW/glfw3.h>
 #include <cstring>
@@ -86,21 +87,23 @@ int main(int argc, char **argv)
     RTCDevice device = rtcNewDevice(NULL);
     rtcSetDeviceErrorFunction(device, errorFunction, NULL);
 
-    CandlelightRTC::Scene scene;
+    CandlelightRTC::ScenePtr scene = std::make_shared<CandlelightRTC::Scene>();
+    CandlelightRTC::SceneDrawer sceneDrawer;
 
     CandlelightRTC::Camera camera;
     camera.getAspectRatio() = WINDOW_WIDTH / WINDOW_HEIGHT;
     camera.getMaxRayDistance() = std::numeric_limits<float>::infinity();
     camera.getNearPlaneDistance() = 1;
     camera.getTransform() = CandlelightRTC::transform_t(
-        glm::vec3(0, 0, 0),
+        glm::vec3(0, 1.5f, 0),
         glm::vec3(1, 1, 1),
-        glm::quat(glm::vec3(0, 0, 0))
+        glm::quat(glm::vec3(glm::radians(15.0f), 0, 0))
     );
 
     CandlelightRTC::LogInfo("Creating scene object...");
 
-    scene.Setup(device, drawer, camera);
+    scene->Setup(device, drawer, camera);
+    sceneDrawer.Setup(drawer);
 
     CandlelightRTC::LogInfo("Begin drawing...");
 
@@ -116,7 +119,8 @@ int main(int argc, char **argv)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
+        sceneDrawer.DrawScene(scene, WINDOW_WIDTH, WINDOW_HEIGHT);
+        // scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         if(PRODUCE_IMAGE){
             drawer->PrintBufferToImage();
@@ -131,19 +135,19 @@ int main(int argc, char **argv)
         // input
 
         if(glfwGetKey(window, GLFW_KEY_A))
-            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Right() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Right() * cameraSpeed * deltaTime;
         if(glfwGetKey(window, GLFW_KEY_D))
-            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Right() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Right() * cameraSpeed * deltaTime;
 
         if(glfwGetKey(window, GLFW_KEY_W))
-            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
         if(glfwGetKey(window, GLFW_KEY_S))
-            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
 
         if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
-            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Up() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Up() * cameraSpeed * deltaTime;
         if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
-            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Up() * cameraSpeed * deltaTime;
+            scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Up() * cameraSpeed * deltaTime;
 
         deltaTime = ((float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timeLastFrame).count() / 1000.0f);
         CandlelightRTC::LogInfo("FPS: " + std::to_string(1.0f / deltaTime));

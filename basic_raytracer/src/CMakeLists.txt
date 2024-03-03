@@ -7,6 +7,7 @@ target_sources(basicraytracer
         mesh.cpp
         GLDrawer.cpp
         logger.cpp
+        sceneDrawer.cpp
 )
 
 target_include_directories(basicraytracer

@@ -27,6 +27,7 @@ namespace CandlelightRTC {
     }
 
     static MeshPtr SPHERE_MESH = nullptr;
+    static MeshPtr PLANE_MESH = nullptr;
 
     std::shared_ptr<Mesh> Mesh::getSphereMesh(RTCDevice &device)
     {
@@ -84,8 +85,8 @@ namespace CandlelightRTC {
                 if(i != 0)
                 {
                     indices.push_back(k1);
-                    indices.push_back(k1 + 1);
                     indices.push_back(k2);
+                    indices.push_back(k1 + 1);
                 }
 
                 // k1+1 => k2 => k2+1
@@ -102,6 +103,9 @@ namespace CandlelightRTC {
 
         SPHERE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
+        CandlelightRTC::LogInfo("Finishing...");
+
+
         SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
             RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), indices.size() / 3);
         memcpy(SPHERE_MESH->getIndices(), indices.data(), indices.size() * sizeof(u_int));
@@ -110,11 +114,56 @@ namespace CandlelightRTC {
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
         memcpy(SPHERE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
 
+        CandlelightRTC::LogInfo("Finishing...");
+
         SPHERE_MESH->m_VertexCount = verts.size();
         SPHERE_MESH->m_IndexCount = indices.size();
 
         return SPHERE_MESH;
 
+    }
+
+
+    std::shared_ptr<Mesh> Mesh::getPlaneMesh(RTCDevice &device)
+    {
+        PLANE_MESH = std::make_shared<Mesh>();
+
+        CandlelightRTC::LogInfo("Creating plane mesh...");
+
+        std::vector<float> verts{
+            -1, 0, -1,
+            -1, 0,  1,
+             1, 0,  1,
+             1, 0, -1,
+        };
+
+        std::vector<int> indices{
+            0, 1, 2,
+            1, 2, 3
+        };
+
+
+        CandlelightRTC::LogInfo("Creating embree geometry...");
+
+        PLANE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+
+        CandlelightRTC::LogInfo("Finishing...");
+
+
+        PLANE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(PLANE_MESH->getRTCGeometry(),
+            RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), indices.size() / 3);
+        memcpy(PLANE_MESH->getIndices(), indices.data(), indices.size() * sizeof(u_int));
+
+        PLANE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(PLANE_MESH->getRTCGeometry(),
+            RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
+        memcpy(PLANE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
+
+        CandlelightRTC::LogInfo("Finishing...");
+
+        PLANE_MESH->m_VertexCount = verts.size();
+        PLANE_MESH->m_IndexCount = indices.size();
+
+        return PLANE_MESH;
     }
 
     void Mesh::ApplyTransform(transform_t transform){

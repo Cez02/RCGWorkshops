@@ -3,9 +3,13 @@
 #include <embree3/rtcore.h>
 #include <vector>
 
+#include <memory>
+
 #include "objects.hpp"
 #include "camera.hpp"
 #include "GLDrawer.hpp"
+
+#include "material.hpp"
 
 namespace CandlelightRTC {
 
@@ -18,12 +22,18 @@ namespace CandlelightRTC {
 
         std::vector<PObjectPtr> m_ObjectsInScene;
 
-        void AttachObject(PObjectPtr obj);
+        void AttachObject(PObjectPtr obj, int id);
+
+        std::map<int, material_t> m_Materials;
 
     public:
         void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
         void DrawScene(int screenWidth, int screenHeight);
 
         Camera &getCamera();
+        RTCScene &getRTCScene();
+        std::map<int, material_t> &getMaterials();
     };
+
+    typedef std::shared_ptr<Scene> ScenePtr;
 }

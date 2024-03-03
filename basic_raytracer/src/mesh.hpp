@@ -25,6 +25,7 @@ namespace CandlelightRTC {
         void ApplyTransform(transform_t transform);
 
         static std::shared_ptr<Mesh> getSphereMesh(RTCDevice &device);
+        static std::shared_ptr<Mesh> getPlaneMesh(RTCDevice &device);
     };
 
     typedef std::shared_ptr<Mesh> MeshPtr;
