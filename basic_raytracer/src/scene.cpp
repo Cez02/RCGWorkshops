@@ -7,6 +7,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 namespace CandlelightRTC {
+
     void Scene::Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera)
     {
         m_RTCScene = rtcNewScene(rtcDevice);
@@ -19,21 +20,16 @@ namespace CandlelightRTC {
         CandlelightRTC::LogInfo("Creating geometry");
 
         PObjectPtr newObject = std::make_shared<PObject>();
-
-        CandlelightRTC::LogInfo("   ... creating sphere mesh ...");
-
         newObject->getMesh() = Mesh::getSphereMesh(rtcDevice);
 
+        newObject->getTransform().Position = glm::vec3(0, 0, 5);
+
+
+
         CandlelightRTC::LogInfo("Attaching geometry and comitting...");
-        CandlelightRTC::LogInfo("   ... attaching ...");
 
-        for(int i = 0; i<9; i += 3){
-            LogInfo("Vertex " + std::to_string(i) + ": " + std::to_string(newObject->getMesh()->getVertices()[i]) + " " + std::to_string(newObject->getMesh()->getVertices()[i + 1]) + " " + std::to_string(newObject->getMesh()->getVertices()[i + 2]));
-        }
-        rtcAttachGeometry(m_RTCScene, newObject->getMesh()->getRTCGeometry());
-        CandlelightRTC::LogInfo("   ... releasing geometry ...");
+        AttachObject(newObject);
 
-        rtcReleaseGeometry(newObject->getMesh()->getRTCGeometry());
         CandlelightRTC::LogInfo("   ... commiting scene ...");
 
         rtcCommitScene(m_RTCScene);
@@ -45,12 +41,15 @@ namespace CandlelightRTC {
         rayhit.ray.dir_x  = 0; rayhit.ray.dir_y = 0; rayhit.ray.dir_z = 1;
         rayhit.ray.tnear  = 0.f;
         rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
+        rayhit.ray.mask = -1;
+        rayhit.ray.flags = 0;
         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
-        
-        // RTCIntersectArguments args;
-        // rtcInitIntersectArguments(&args);
+        rayhit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
 
-        rtcIntersect1(m_RTCScene, &rayhit);
+        RTCIntersectContext context;
+        rtcInitIntersectContext(&context);
+
+        rtcIntersect1(m_RTCScene, &context, &rayhit);
 
         if(rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
             LogInfo("Hit sphere as expected at " + std::to_string(rayhit.hit.Ng_x) + " " + std::to_string(rayhit.hit.Ng_y) + " " + std::to_string(rayhit.hit.Ng_z));
@@ -61,9 +60,38 @@ namespace CandlelightRTC {
         }
 
     }
+    
+    void Scene::AttachObject(PObjectPtr obj)
+    {
+        // apply transform to mesh and commit
+
+        obj->getMesh()->ApplyTransform(obj->getTransform());
+        rtcCommitGeometry(obj->getMesh()->getRTCGeometry());
+
+        rtcAttachGeometry(m_RTCScene, obj->getMesh()->getRTCGeometry());
+        rtcReleaseGeometry(obj->getMesh()->getRTCGeometry());
+    }
+
 
     void Scene::DrawScene(int screenWidth, int screenHeight)
     {
+
+
+
+        RTCRayHit rayhit; 
+
+        rayhit.ray.org_x  = 0; rayhit.ray.org_y = 0; rayhit.ray.org_z = 0;
+        rayhit.ray.dir_x  = 0; rayhit.ray.dir_y = 0; rayhit.ray.dir_z = 1;
+        rayhit.ray.tnear  = 0.f;
+        rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
+        rayhit.ray.mask = -1;
+        rayhit.ray.flags = 0;
+        rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
+        rayhit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
+        
+        RTCIntersectContext context;
+
+
         glm::vec3 positionToRenderFrom = m_Camera.getTransform().Position;
 
         for(int i = 0; i<screenWidth; i++){
@@ -80,23 +108,31 @@ namespace CandlelightRTC {
                     m_Camera.getNearPlaneDistance()
                 );
 
-                // LogInfo("Starting point: " + glm::to_string(positionToRenderFrom) + ". Direction: " + glm::to_string(pointPos));
+                pointPos = glm::vec4(pointPos.x, pointPos.y, pointPos.z, 1.0) * m_Camera.getTransform().toMat4();
 
-                // cast the ray and stuff
 
-                glm::vec3 rayDir = glm::normalize(pointPos - positionToRenderFrom);
+                glm::vec3 rayDir = (pointPos - positionToRenderFrom);
 
-                RTCRayHit rayhit; 
+
+                // RTCRayHit rayhit; 
                 rayhit.ray.org_x  = positionToRenderFrom.x; rayhit.ray.org_y = positionToRenderFrom.y; rayhit.ray.org_z = positionToRenderFrom.z;
                 rayhit.ray.dir_x  = rayDir.x; rayhit.ray.dir_y = rayDir.y; rayhit.ray.dir_z =  rayDir.z;
                 rayhit.ray.tnear  = 0.f;
                 rayhit.ray.tfar   = std::numeric_limits<float>::infinity();
                 rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
-                
-                rtcIntersect1(m_RTCScene, &rayhit);
+
+                // RTCIntersectContext context;
+                rtcInitIntersectContext(&context);
+
+                rtcIntersect1(m_RTCScene, &context, &rayhit);
 
                 if(rayhit.hit.geomID != RTC_INVALID_GEOMETRY_ID){
-                    m_Drawer->SetCanvasPixel(i, j, glm::vec3(1, 0, 0));
+                    glm::vec3 n = glm::vec3(rayhit.hit.Ng_x, rayhit.hit.Ng_y, rayhit.hit.Ng_z);
+                    glm::vec3 r = rayDir - 2.0f*glm::dot(rayDir, n)*n;
+
+                    r = (r + glm::vec3(1, 1, 1)) * 0.5f;
+                    // LogInfo("Calculated r: " + glm::to_string(r));
+                    m_Drawer->SetCanvasPixel(i, j, r);
                 }
                 else {
                     m_Drawer->SetCanvasPixel(i, j, glm::vec3(0.3, 0.3, 0.3));
@@ -105,5 +141,9 @@ namespace CandlelightRTC {
             }
         }
 
+    }
+    Camera &Scene::getCamera()
+    {
+        return m_Camera;
     }
 }

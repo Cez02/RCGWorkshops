@@ -8,3 +8,8 @@ target_sources(basicraytracer
         GLDrawer.cpp
         logger.cpp
 )
+
+target_include_directories(basicraytracer
+    PRIVATE
+        .
+)

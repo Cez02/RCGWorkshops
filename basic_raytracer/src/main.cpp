@@ -1,4 +1,4 @@
-#include <embree4/rtcore.h>
+#include <embree3/rtcore.h>
 #include <glad/glad.h>
 
 #include "common.hpp"
@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <chrono>
 
 #define WINDOW_WIDTH 480
 #define WINDOW_HEIGHT 480
@@ -61,7 +62,7 @@ int main()
 
     CandlelightRTC::LogInfo("Setting up scene...");
 
-    RTCDevice device = rtcNewDevice("verbose=3");
+    RTCDevice device = rtcNewDevice(NULL);
     rtcSetDeviceErrorFunction(device, errorFunction, NULL);
 
     CandlelightRTC::Scene scene;
@@ -82,17 +83,46 @@ int main()
 
     CandlelightRTC::LogInfo("Begin drawing...");
 
+    
+    auto timeLastFrame = std::chrono::high_resolution_clock::now();
+    float deltaTime;
+
+    float cameraSpeed = 0.01f;
+
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
+    while (glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && !glfwWindowShouldClose(window))
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        //scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
+        scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
         drawer->DrawCanvas();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+
+        // input
+
+        if(glfwGetKey(window, GLFW_KEY_A))
+            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Right() * cameraSpeed * deltaTime;
+        if(glfwGetKey(window, GLFW_KEY_D))
+            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Right() * cameraSpeed * deltaTime;
+
+        if(glfwGetKey(window, GLFW_KEY_W))
+            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
+        if(glfwGetKey(window, GLFW_KEY_S))
+            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+            scene.getCamera().getTransform().Position += -scene.getCamera().getTransform().Up() * cameraSpeed * deltaTime;
+        if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
+            scene.getCamera().getTransform().Position += scene.getCamera().getTransform().Up() * cameraSpeed * deltaTime;
+
+        deltaTime = ((float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timeLastFrame).count() / 1000.0f);
+        CandlelightRTC::LogInfo("FPS: " + std::to_string(1.0f / deltaTime));
+
+        timeLastFrame = std::chrono::high_resolution_clock::now();
     }
 
     CandlelightRTC::LogInfo("Closing...");

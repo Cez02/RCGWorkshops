@@ -22,6 +22,18 @@ namespace CandlelightRTC {
             Scale = scale;
             Rotation = rotation;
         }
+
+        glm::vec3 Right(){
+            return glm::vec4(1.0, 0.0, 0.0, 1.0) * glm::toMat4(Rotation);
+        }
+
+        glm::vec3 Forward(){
+            return glm::vec4(0.0, 0.0, 1.0, 1.0) * glm::toMat4(Rotation);
+        }
+
+        glm::vec3 Up(){
+            return glm::vec4(0.0, 1.0, 0.0, 1.0) * glm::toMat4(Rotation);
+        }
     };
 
 

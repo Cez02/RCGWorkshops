@@ -141,7 +141,12 @@ namespace CandlelightRTC{
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, canvasWidth, canvasHeight, 0, GL_RGBA,
             GL_UNSIGNED_BYTE, NULL);
 
-        glUniform1i(glGetUniformLocation(m_ShaderProgram, "Canvas"), 0);        
+        glUniform1i(glGetUniformLocation(m_ShaderProgram, "Canvas"), 0);   
+
+        m_CanvasHeight = canvasHeight;
+        m_CanvasWidth = canvasWidth;
+
+        m_CanvasPreBuffer.resize(canvasHeight * canvasWidth);
 
     }
 
@@ -160,21 +165,24 @@ namespace CandlelightRTC{
             255
         };
 
-        glTexSubImage2D(
-            GL_TEXTURE_2D,
-            0,
-            x,
-            y,
-            1,
-            1,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            &colorConv
-        );    
+        m_CanvasPreBuffer[y * m_CanvasWidth + x] = colorConv;
     }
 
     void GLDrawer::DrawCanvas()
     {
+        glTexSubImage2D(
+            GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            m_CanvasWidth,
+            m_CanvasHeight,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            m_CanvasPreBuffer.data()
+        );    
+
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_CanvasTexture);
 

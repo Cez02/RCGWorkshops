@@ -1,6 +1,8 @@
 #pragma once
 
-#include <embree4/rtcore.h>
+#include <embree3/rtcore.h>
+
+#include "transform.hpp"
 
 #include <memory>
 
@@ -11,6 +13,7 @@ namespace CandlelightRTC {
     class Mesh {
     private:
         RTCGeometry m_RTCGeometry;
+        int m_VertexCount, m_IndexCount;
         float *m_Vertices;
         u_int *m_Indices;
 
@@ -18,6 +21,8 @@ namespace CandlelightRTC {
         floatPtr &getVertices();
         uintPtr &getIndices();
         RTCGeometry &getRTCGeometry();
+
+        void ApplyTransform(transform_t transform);
 
         static std::shared_ptr<Mesh> getSphereMesh(RTCDevice &device);
     };

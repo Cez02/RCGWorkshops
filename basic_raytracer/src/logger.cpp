@@ -1,11 +1,9 @@
 #include "logger.hpp"
 
-#include "common.hpp"
-#include <chrono>
 #include <iomanip>
 
 namespace CandlelightRTC{
-
+    
     float getSecondsSinceStart(){
         return (float)std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::high_resolution_clock::now() - START_TIME)).count() / 1000.0;
     }

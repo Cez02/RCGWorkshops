@@ -5,6 +5,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/string_cast.hpp>
+
+#include <cstring>
+
 #include "logger.hpp"
 
 namespace CandlelightRTC {
@@ -33,40 +36,9 @@ namespace CandlelightRTC {
         SPHERE_MESH = std::make_shared<Mesh>();
 
 
-        SPHERE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
-
-        SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
-            RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), 1);
-
-        SPHERE_MESH->getIndices()[0] = 0;
-        SPHERE_MESH->getIndices()[1] = 1;
-        SPHERE_MESH->getIndices()[2] = 2;
-
-        SPHERE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
-            RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), 3);
-        SPHERE_MESH->getVertices()[0] = -1;
-        SPHERE_MESH->getVertices()[1] = -1;
-        SPHERE_MESH->getVertices()[2] = 5;
-
-        SPHERE_MESH->getVertices()[3] = 0;
-        SPHERE_MESH->getVertices()[4] = 1;
-        SPHERE_MESH->getVertices()[5] = 5;
-
-        SPHERE_MESH->getVertices()[6] = 1;
-        SPHERE_MESH->getVertices()[7] = -1;
-        SPHERE_MESH->getVertices()[8] = 5;
-
-        rtcCommitGeometry(SPHERE_MESH->getRTCGeometry());
-
-        return SPHERE_MESH;
-
-
-        int parallels = 50;
-        int meridians = 50;
-
         float radius = 1;
-        float sectorCount = 20;
-        float stackCount = 30;
+        float sectorCount = 50;
+        float stackCount = 60;
 
         float x, y, z, xy;                              // vertex position
         float nx, ny, nz, lengthInv = 1.0f / 1.0f;    // vertex normal
@@ -103,10 +75,6 @@ namespace CandlelightRTC {
         for(int i = 2; i<verts.size(); i += 3)
             verts[i] += 5;
 
-        for(int i = 0; i<verts.size(); i += 3){
-            LogInfo("Vertex " + std::to_string(i) + ": " + std::to_string(verts[i]) + " " + std::to_string(verts[i + 1]) + " " + std::to_string(verts[i + 2]));
-        }
-
         int k1, k2;
         for(int i = 0; i < stackCount; ++i)
         {
@@ -120,8 +88,8 @@ namespace CandlelightRTC {
                 if(i != 0)
                 {
                     indices.push_back(k1);
-                    indices.push_back(k2);
                     indices.push_back(k1 + 1);
+                    indices.push_back(k2);
                 }
 
                 // k1+1 => k2 => k2+1
@@ -146,13 +114,22 @@ namespace CandlelightRTC {
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
         memcpy(SPHERE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
 
-        for(int i = 0; i<verts.size(); i += 3){
-            LogInfo("Vertex " + std::to_string(i) + ": " + std::to_string(SPHERE_MESH->getVertices()[i]) + " " + std::to_string(SPHERE_MESH->getVertices()[i + 1]) + " " + std::to_string(SPHERE_MESH->getVertices()[i + 2]));
-        }
-
-        rtcCommitGeometry(SPHERE_MESH->getRTCGeometry());
+        SPHERE_MESH->m_VertexCount = verts.size();
+        SPHERE_MESH->m_IndexCount = indices.size();
 
         return SPHERE_MESH;
 
+    }
+
+    void Mesh::ApplyTransform(transform_t transform){
+        auto trn = transform.toMat4();
+
+        for(int i = 0; i<m_VertexCount; i += 3){
+            glm::vec3 newCoord = glm::vec4(m_Vertices[i], m_Vertices[i + 1], m_Vertices[i + 2], 1.0f) * trn;
+
+            m_Vertices[i] = newCoord.x;
+            m_Vertices[i + 1] = newCoord.y;
+            m_Vertices[i + 2] = newCoord.z;
+        }
     }
 }

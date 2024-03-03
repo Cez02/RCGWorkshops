@@ -1,6 +1,6 @@
 #pragma once
 
-#include <embree4/rtcore.h>
+#include <embree3/rtcore.h>
 #include <vector>
 
 #include "objects.hpp"
@@ -16,10 +16,14 @@ namespace CandlelightRTC {
         GLDrawer *m_Drawer;
         Camera m_Camera;
 
-        std::vector<PObject> m_ObjectsInScene;
+        std::vector<PObjectPtr> m_ObjectsInScene;
+
+        void AttachObject(PObjectPtr obj);
 
     public:
         void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
         void DrawScene(int screenWidth, int screenHeight);
+
+        Camera &getCamera();
     };
 }

@@ -8,7 +8,7 @@ find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 
-find_package(embree 4 REQUIRED)
+find_package(embree 3 REQUIRED)
 
 target_compile_definitions(basicraytracer
     PUBLIC
