@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 #include "common.hpp"
 #include "logger.hpp"
 
@@ -150,6 +153,14 @@ namespace CandlelightRTC{
 
     }
 
+    void GLDrawer::Reset(GLuint canvasWidth, GLuint canvasHeight)
+    {
+        m_CanvasHeight = canvasHeight;
+        m_CanvasWidth = canvasWidth;
+
+        m_CanvasPreBuffer.resize(canvasHeight * canvasWidth);
+    }
+
     void GLDrawer::Release()
     {
         glDeleteVertexArrays(1, &m_VAO);
@@ -166,6 +177,26 @@ namespace CandlelightRTC{
         };
 
         m_CanvasPreBuffer[y * m_CanvasWidth + x] = colorConv;
+    }
+
+    void GLDrawer::PrintBufferToImage()
+    {
+#define CHANNEL_NUM 3
+
+        uint8_t* pixels = new uint8_t[m_CanvasHeight * m_CanvasWidth * CHANNEL_NUM];
+
+        int index = 0;
+        for (int j = m_CanvasHeight - 1; j >= 0; --j)
+        {
+            for (int i = 0; i < m_CanvasWidth; ++i)
+            {
+                pixels[index++] = m_CanvasPreBuffer[j * m_CanvasWidth + i].at(0);
+                pixels[index++] = m_CanvasPreBuffer[j * m_CanvasWidth + i].at(1);
+                pixels[index++] = m_CanvasPreBuffer[j * m_CanvasWidth + i].at(2);
+            }
+        }
+
+        stbi_write_png("render.png", m_CanvasWidth, m_CanvasHeight, CHANNEL_NUM, pixels, m_CanvasWidth * CHANNEL_NUM);
     }
 
     void GLDrawer::DrawCanvas()

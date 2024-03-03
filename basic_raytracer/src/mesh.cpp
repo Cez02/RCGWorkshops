@@ -30,11 +30,7 @@ namespace CandlelightRTC {
 
     std::shared_ptr<Mesh> Mesh::getSphereMesh(RTCDevice &device)
     {
-        if(SPHERE_MESH != nullptr)
-            return SPHERE_MESH;
-
         SPHERE_MESH = std::make_shared<Mesh>();
-
 
         float radius = 1;
         float sectorCount = 50;
@@ -125,7 +121,7 @@ namespace CandlelightRTC {
         auto trn = transform.toMat4();
 
         for(int i = 0; i<m_VertexCount; i += 3){
-            glm::vec3 newCoord = glm::vec4(m_Vertices[i], m_Vertices[i + 1], m_Vertices[i + 2], 1.0f) * trn;
+            glm::vec3 newCoord = trn * glm::vec4(m_Vertices[i], m_Vertices[i + 1], m_Vertices[i + 2], 1.0f) ;
 
             m_Vertices[i] = newCoord.x;
             m_Vertices[i + 1] = newCoord.y;

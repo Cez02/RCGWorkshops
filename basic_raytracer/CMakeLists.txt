@@ -7,7 +7,6 @@ set_property(TARGET basicraytracer PROPERTY CXX_STANDARD 17)
 find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
-
 find_package(embree 3 REQUIRED)
 
 target_compile_definitions(basicraytracer
@@ -22,4 +21,5 @@ target_link_libraries(basicraytracer
         embree
         glm::glm
         glad
+        stb_image
 )

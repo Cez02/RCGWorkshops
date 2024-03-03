@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <map>
 
 namespace CandlelightRTC {
 
@@ -16,13 +17,16 @@ namespace CandlelightRTC {
 
         int m_CanvasWidth, m_CanvasHeight;
 
-        std::vector<colorrgba_t> m_CanvasPreBuffer;
+        std::vector<colorrgba_t> m_CanvasPreBuffer; 
 
     public:
         void Setup(GLuint canvasWidth, GLuint canvasHeight);
+        void Reset(GLuint canvasWidth, GLuint canvasHeight);
         void Release();
 
         void SetCanvasPixel(GLuint x, GLuint y, glm::vec3 color);
+
+        void PrintBufferToImage();
 
         void DrawCanvas();
     };
