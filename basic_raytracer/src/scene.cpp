@@ -17,23 +17,24 @@ namespace CandlelightRTC {
         m_Drawer = drawer;
         m_Camera = camera;
 
-        // rtcSetSceneFlags(m_RTCScene, RTC_SCENE_FLAG_ROBUST);
+        rtcSetSceneFlags(m_RTCScene, RTC_SCENE_FLAG_ROBUST);
 
         CandlelightRTC::LogInfo("Creating geometry");
 
         PObjectPtr newObject = std::make_shared<PObject>();
         newObject->getMesh() = Mesh::getSphereMesh(rtcDevice);
-        newObject->getTransform().Position = glm::vec3(0, 0.5, 4);
+        newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
 
         PObjectPtr newObject2 = std::make_shared<PObject>();
         newObject2->getMesh() = Mesh::getSphereMesh(rtcDevice);
-        newObject2->getTransform().Position = glm::vec3(1, 0.25f, 2);
-        newObject2->getTransform().Scale *= 0.5f;
+        newObject2->getTransform().Position = glm::vec3(0.8f, 0.8f, -1.5f);
+        // newObject2->getTransform().Scale *= 0.5f;
 
         PObjectPtr ground = std::make_shared<PObject>();
         ground->getMesh() = Mesh::getPlaneMesh(rtcDevice);
         ground->getTransform().Position = glm::vec3(0, 0, 0);
-        ground->getTransform().Scale *= 5;
+        // ground->getTransform().Rotation = glm::quat(glm::vec3(glm::radians(180), 0,))
+        ground->getTransform().Scale *= 6;
 
         CandlelightRTC::LogInfo("Attaching geometry and comitting...");
 
@@ -41,9 +42,9 @@ namespace CandlelightRTC {
         AttachObject(newObject2, 1);
         AttachObject(ground, 2);
 
-        m_Materials[0] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.4, 0.3));
-        m_Materials[1] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 0.7, 0.3));
-        m_Materials[2] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.3, 0.4, 0.7));
+        m_Materials[0] = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        m_Materials[1] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 1.0, 0.4));
+        m_Materials[2] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.7, 0.7));
 
         CandlelightRTC::LogInfo("   ... commiting scene ...");
 

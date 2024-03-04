@@ -84,17 +84,17 @@ namespace CandlelightRTC {
                 // k1 => k2 => k1+1
                 if(i != 0)
                 {
+                    indices.push_back(k1 + 1);
                     indices.push_back(k1);
                     indices.push_back(k2);
-                    indices.push_back(k1 + 1);
                 }
 
                 // k1+1 => k2 => k2+1
                 if(i != (stackCount-1))
                 {
-                    indices.push_back(k1 + 1);
                     indices.push_back(k2);
                     indices.push_back(k2 + 1);
+                    indices.push_back(k1 + 1);
                 }
             }
         }

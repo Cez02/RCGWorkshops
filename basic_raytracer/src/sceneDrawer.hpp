@@ -13,13 +13,13 @@ namespace CandlelightRTC {
         ScenePtr m_CurrentScene;
         GLDrawer *m_Drawer;
 
-        colorrgba_v_t FollowRay(glm::vec3 origin, glm::vec3 direction, int depth);
-        void CalculateSample(int i, int j, int screenWidth, int screenHeight, glm::vec3 origin, colorrgba_v_t *res);
+        static colorrgba_v_t FollowRay(glm::vec3 origin, glm::vec3 direction, ScenePtr scene, int depth);
+        static void CalculateSample(int row, ScenePtr scene, int screenWidth, int screenHeight, glm::vec3 origin, colorrgba_v_t *colorRow);
 
     public:
         void Setup(GLDrawer *drawer);
 
-        void DrawScene(ScenePtr scene, int screenWidth, int screenHeight);
+        void DrawScene(ScenePtr scene, int screenWidth, int screenHeight, int sampleCount = 100, int depth = 10);
     };
 
 }

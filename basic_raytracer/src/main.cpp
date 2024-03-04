@@ -10,6 +10,7 @@
 
 #include <GLFW/glfw3.h>
 #include <cstring>
+#include <iomanip>
 
 #include <iostream>
 #include <chrono>
@@ -28,6 +29,26 @@ void errorFunction(void* userPtr, enum RTCError error, const char* str)
     CandlelightRTC::LogError(std::to_string(error) + ": " + std::string(str));
 }
 
+void print_usage(){
+    std::cout << "basictraycer [OPTIONS]" << std::endl;
+
+    std::vector<std::pair<std::string, std::string>> options {
+        {"-i  --image", "Render a still frame to a png image render.png."},
+        {"-wd --width", "Set window width, default: 160."},
+        {"-ht --height", "Set window height, default: 160."},
+        {"-h  --help", "Print the program usage."},
+        {"-sn --sample-count", "Set the raytracer sample count per pixel."},
+        {"-d  --depth", "Set how many ray bounces per ray are accounted for during rendering."}
+    };
+
+    for(auto x : options){
+        std::cout <<  "\t" <<std::setw(25) << std::left << x.first;
+        std::cout << x.second << std::endl;
+    }
+
+    exit(0);
+}
+
 int main(int argc, char **argv)
 {
     srand(time(0));
@@ -38,13 +59,22 @@ int main(int argc, char **argv)
     if (!glfwInit())
         return -1;
 
+    int sampleCount = 100;
+    int rayDepth = 10;
+
     for(int i = 1; i<argc; i++){
-        if(!strcmp(argv[i], "-i"))
+        if(!strcmp(argv[i], "-i") || !strcmp(argv[i], "--image"))
             PRODUCE_IMAGE = true;
-        else if(!strcmp(argv[i], "-w"))
+        else if(!strcmp(argv[i], "-wd") || !strcmp(argv[i], "--width"))
             WINDOW_WIDTH = std::stoi(argv[i+1]);
-        else if(!strcmp(argv[i], "-h"))
+        else if(!strcmp(argv[i], "-ht") || !strcmp(argv[i], "--height"))
             WINDOW_HEIGHT = std::stoi(argv[i+1]);
+        else if(!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help"))
+            print_usage();
+        else if(!strcmp(argv[i], "-sn") || !strcmp(argv[i], "--sample-count"))
+            sampleCount = std::stoi(argv[i+1]);
+        else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--depth"))
+            rayDepth = std::stoi(argv[i+1]);
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -87,7 +117,7 @@ int main(int argc, char **argv)
     RTCDevice device = rtcNewDevice(NULL);
     rtcSetDeviceErrorFunction(device, errorFunction, NULL);
 
-    CandlelightRTC::ScenePtr scene = std::make_shared<CandlelightRTC::Scene>();
+    CandlelightRTC::ScenePtr scene = new CandlelightRTC::Scene();
     CandlelightRTC::SceneDrawer sceneDrawer;
 
     CandlelightRTC::Camera camera;
@@ -119,7 +149,7 @@ int main(int argc, char **argv)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        sceneDrawer.DrawScene(scene, WINDOW_WIDTH, WINDOW_HEIGHT);
+        sceneDrawer.DrawScene(scene, WINDOW_WIDTH, WINDOW_HEIGHT, sampleCount, rayDepth);
         // scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         if(PRODUCE_IMAGE){
@@ -159,6 +189,8 @@ int main(int argc, char **argv)
 
     drawer->Release();
     glfwTerminate();
+
+    delete scene;
     return 0;
 }
 

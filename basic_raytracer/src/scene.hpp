@@ -35,5 +35,5 @@ namespace CandlelightRTC {
         std::map<int, material_t> &getMaterials();
     };
 
-    typedef std::shared_ptr<Scene> ScenePtr;
+    typedef Scene* ScenePtr;
 }
