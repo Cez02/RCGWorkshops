@@ -41,9 +41,9 @@ namespace CandlelightRTC {
             material_t mat = scene->getMaterials()[rayhit.hit.geomID];
 
             if(glm::dot(newRandomRay, n) > 0)
-                return mat.Color  * FollowRay(hitPos, newRandomRay, scene, depth - 1);
+                return mat.Color * 0.8f  * FollowRay(hitPos, newRandomRay, scene, depth - 1);
             else
-                return mat.Color  * FollowRay(hitPos, -newRandomRay, scene, depth - 1);
+                return mat.Color * 0.8f  * FollowRay(hitPos, -newRandomRay, scene, depth - 1);
         }
         else {
             float a = 0.5*(-direction.y + 1.0);
