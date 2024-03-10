@@ -22,17 +22,16 @@ namespace CandlelightRTC {
 
         std::vector<PObjectPtr> m_ObjectsInScene;
 
-        void AttachObject(PObjectPtr obj, int id);
+        std::map<int, PObjectPtr> m_ObjectsInSceneMap;
 
-        std::map<int, material_t> m_Materials;
+        void AttachObject(PObjectPtr obj);
 
     public:
         void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
-        void DrawScene(int screenWidth, int screenHeight);
 
         Camera &getCamera();
         RTCScene &getRTCScene();
-        std::map<int, material_t> &getMaterials();
+        material_t &getMaterialForObject(int instID);
     };
 
     typedef Scene* ScenePtr;

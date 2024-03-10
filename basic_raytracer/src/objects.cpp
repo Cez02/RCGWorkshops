@@ -10,4 +10,14 @@ namespace CandlelightRTC {
     {
         return m_Mesh;
     }
+
+    material_t &PObject::getMaterial()
+    {
+        return m_Material;
+    }
+    
+    u_int &PObject::getInstanceID()
+    {
+        return m_InstanceID;
+    }
 }

@@ -5,6 +5,8 @@
 #include "logger.hpp"
 
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 namespace CandlelightRTC {
 
@@ -19,32 +21,62 @@ namespace CandlelightRTC {
 
         rtcSetSceneFlags(m_RTCScene, RTC_SCENE_FLAG_ROBUST);
 
-        CandlelightRTC::LogInfo("Creating geometry");
+        CandlelightRTC::LogInfo("Creating objects");
+
 
         PObjectPtr newObject = std::make_shared<PObject>();
         newObject->getMesh() = Mesh::getSphereMesh(rtcDevice);
         newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
+        newObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        newObject->getInstanceID() = 1;
 
         PObjectPtr newObject2 = std::make_shared<PObject>();
         newObject2->getMesh() = Mesh::getSphereMesh(rtcDevice);
         newObject2->getTransform().Position = glm::vec3(0.8f, 0.8f, -1.5f);
-        // newObject2->getTransform().Scale *= 0.5f;
+        newObject2->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 1.0, 0.4));
+        newObject2->getInstanceID() = 2;
 
         PObjectPtr ground = std::make_shared<PObject>();
         ground->getMesh() = Mesh::getPlaneMesh(rtcDevice);
         ground->getTransform().Position = glm::vec3(0, 0, 0);
-        // ground->getTransform().Rotation = glm::quat(glm::vec3(glm::radians(180), 0,))
         ground->getTransform().Scale *= 6;
+        ground->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.7, 0.7));
+        ground->getInstanceID() = 3;
+
 
         CandlelightRTC::LogInfo("Attaching geometry and comitting...");
 
-        AttachObject(newObject, 0);
-        AttachObject(newObject2, 1);
-        AttachObject(ground, 2);
 
-        m_Materials[0] = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
-        m_Materials[1] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 1.0, 0.4));
-        m_Materials[2] = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.7, 0.7));
+        AttachObject(newObject);
+        AttachObject(newObject2);
+        AttachObject(ground);
+
+
+
+
+        // created instanced geom
+
+        for(int i = 0; i<m_ObjectsInScene.size(); i++){
+            // attach instance
+            auto transMat = m_ObjectsInScene[i]->getTransform().toMat4();
+
+            RTCGeometry geom = rtcNewGeometry(rtcDevice, RTC_GEOMETRY_TYPE_INSTANCE);
+            rtcSetGeometryInstancedScene(geom, m_ObjectsInScene[i]->getMesh()->getRTCScene());
+            rtcSetGeometryTimeStepCount(geom, 1);
+            rtcSetGeometryTransform(geom,
+                                    0,
+                                    RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
+                                    glm::value_ptr(transMat));
+            rtcCommitGeometry(geom);
+
+            CandlelightRTC::LogInfo("Attaching instance: " + std::to_string(m_ObjectsInScene[i]->getInstanceID()));
+
+            rtcAttachGeometryByID(m_RTCScene, geom, m_ObjectsInScene[i]->getInstanceID());
+            rtcReleaseGeometry(geom);
+
+            m_ObjectsInSceneMap[m_ObjectsInScene[i]->getInstanceID()] = m_ObjectsInScene[i];
+        }
+
 
         CandlelightRTC::LogInfo("   ... commiting scene ...");
 
@@ -75,29 +107,25 @@ namespace CandlelightRTC {
             // throw std::runtime_error("Incorrect scene setup. Test ray did not hit sphere.");
         }
 
+        // release meshes 
+        rtcReleaseScene(Mesh::getPlaneMesh(rtcDevice)->getRTCScene());
+        rtcReleaseScene(Mesh::getSphereMesh(rtcDevice)->getRTCScene());
+
     }
     
-    void Scene::AttachObject(PObjectPtr obj, int id)
+    void Scene::AttachObject(PObjectPtr obj)
     {
         // apply transform to mesh and commit
-
-        obj->getMesh()->ApplyTransform(obj->getTransform());
-        rtcCommitGeometry(obj->getMesh()->getRTCGeometry());
-
-        rtcAttachGeometryByID(m_RTCScene, obj->getMesh()->getRTCGeometry(), id);
-        rtcReleaseGeometry(obj->getMesh()->getRTCGeometry());
+        m_ObjectsInScene.push_back(obj);
     }
 
-
-    // Ideally this should land in a totally seperate class/header file
-    void Scene::DrawScene(int screenWidth, int screenHeight)
+    material_t &Scene::getMaterialForObject(int instID)
     {
-
-    }
-
-    std::map<int, material_t> &Scene::getMaterials() 
-    {
-        return m_Materials;
+        if(m_ObjectsInSceneMap.count(instID) <= 0){
+            LogError("Could not find material for object " + std::to_string(instID));
+            throw std::runtime_error("Could not find material");
+        }
+        return m_ObjectsInSceneMap[instID]->getMaterial();
     }
 
     Camera &Scene::getCamera()
