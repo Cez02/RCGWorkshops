@@ -19,7 +19,7 @@ namespace CandlelightRTC {
     public:
         void Setup(GLDrawer *drawer);
 
-        void DrawScene(ScenePtr scene, int screenWidth, int screenHeight, int sampleCount = 100, int depth = 10);
+        void DrawScene(ScenePtr scene, int screenWidth, int screenHeight, int sampleCount = 100, int depth = 10, int maxJobsCount = 10);
     };
 
 }

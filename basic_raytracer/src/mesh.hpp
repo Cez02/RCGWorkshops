@@ -12,7 +12,7 @@ typedef u_int* uintPtr;
 namespace CandlelightRTC {
     class Mesh {
     private:
-        RTCGeometry m_RTCGeometry;
+        RTCScene m_RTCScene;
         int m_VertexCount, m_IndexCount;
         float *m_Vertices;
         u_int *m_Indices;
@@ -20,12 +20,13 @@ namespace CandlelightRTC {
     public:
         floatPtr &getVertices();
         uintPtr &getIndices();
-        RTCGeometry &getRTCGeometry();
+        RTCScene &getRTCScene();
 
         void ApplyTransform(transform_t transform);
 
         static std::shared_ptr<Mesh> getSphereMesh(RTCDevice &device);
         static std::shared_ptr<Mesh> getPlaneMesh(RTCDevice &device);
+        static std::shared_ptr<Mesh> getMeshFromFile(RTCDevice &device, std::string modelName);
     };
 
     typedef std::shared_ptr<Mesh> MeshPtr;

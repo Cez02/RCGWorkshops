@@ -21,9 +21,9 @@ namespace CandlelightRTC {
         return m_Indices;
     }
 
-    RTCGeometry &Mesh::getRTCGeometry()
+    RTCScene &Mesh::getRTCScene()
     {
-        return m_RTCGeometry;
+        return m_RTCScene;
     }
 
     static MeshPtr SPHERE_MESH = nullptr;
@@ -31,6 +31,9 @@ namespace CandlelightRTC {
 
     std::shared_ptr<Mesh> Mesh::getSphereMesh(RTCDevice &device)
     {
+        if(SPHERE_MESH != nullptr)
+            return SPHERE_MESH;
+
         SPHERE_MESH = std::make_shared<Mesh>();
 
         float radius = 1;
@@ -99,18 +102,15 @@ namespace CandlelightRTC {
             }
         }
 
-        CandlelightRTC::LogInfo("Creating embree geometry...");
+        CandlelightRTC::LogInfo("Creating embree geometry for sphere...");
 
-        SPHERE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+        RTCGeometry geo = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
-        CandlelightRTC::LogInfo("Finishing...");
-
-
-        SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
+        SPHERE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), indices.size() / 3);
         memcpy(SPHERE_MESH->getIndices(), indices.data(), indices.size() * sizeof(u_int));
 
-        SPHERE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(SPHERE_MESH->getRTCGeometry(),
+        SPHERE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
         memcpy(SPHERE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
 
@@ -119,14 +119,22 @@ namespace CandlelightRTC {
         SPHERE_MESH->m_VertexCount = verts.size();
         SPHERE_MESH->m_IndexCount = indices.size();
 
+        SPHERE_MESH->m_RTCScene = rtcNewScene(device);
+        rtcAttachGeometry(SPHERE_MESH->m_RTCScene, geo);
+        rtcCommitGeometry(geo);
+        rtcCommitScene(SPHERE_MESH->m_RTCScene);
+        rtcReleaseGeometry(geo);
+
         return SPHERE_MESH;
-
     }
-
 
     std::shared_ptr<Mesh> Mesh::getPlaneMesh(RTCDevice &device)
     {
+        if(PLANE_MESH != nullptr)
+            return PLANE_MESH;
+
         PLANE_MESH = std::make_shared<Mesh>();
+
 
         CandlelightRTC::LogInfo("Creating plane mesh...");
 
@@ -143,18 +151,15 @@ namespace CandlelightRTC {
         };
 
 
-        CandlelightRTC::LogInfo("Creating embree geometry...");
+        CandlelightRTC::LogInfo("Creating embree geometry for plane...");
 
-        PLANE_MESH->getRTCGeometry() = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
+        RTCGeometry geo = rtcNewGeometry(device, RTC_GEOMETRY_TYPE_TRIANGLE);
 
-        CandlelightRTC::LogInfo("Finishing...");
-
-
-        PLANE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(PLANE_MESH->getRTCGeometry(),
+        PLANE_MESH->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), indices.size() / 3);
         memcpy(PLANE_MESH->getIndices(), indices.data(), indices.size() * sizeof(u_int));
 
-        PLANE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(PLANE_MESH->getRTCGeometry(),
+        PLANE_MESH->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), verts.size() / 3);
         memcpy(PLANE_MESH->getVertices(), verts.data(), verts.size() * sizeof(float));
 
@@ -163,7 +168,21 @@ namespace CandlelightRTC {
         PLANE_MESH->m_VertexCount = verts.size();
         PLANE_MESH->m_IndexCount = indices.size();
 
+        PLANE_MESH->m_RTCScene = rtcNewScene(device);
+
+        rtcAttachGeometry(PLANE_MESH->m_RTCScene, geo);
+
+        rtcCommitGeometry(geo);
+        rtcCommitScene(PLANE_MESH->m_RTCScene);
+
+        rtcReleaseGeometry(geo);
+
         return PLANE_MESH;
+    }
+
+    std::shared_ptr<Mesh> Mesh::getMeshFromFile(RTCDevice &device, std::string modelName)
+    {
+        return std::shared_ptr<Mesh>();
     }
 
     void Mesh::ApplyTransform(transform_t transform){
@@ -177,4 +196,5 @@ namespace CandlelightRTC {
             m_Vertices[i + 2] = newCoord.z;
         }
     }
+
 }

@@ -38,7 +38,9 @@ namespace CandlelightRTC {
             glm::vec3 newRandomRay = glm::vec3((float)rand() / (float)RAND_MAX - 0.5f, (float)rand() / (float)RAND_MAX - 0.5f, (float)rand() / (float)RAND_MAX - 0.5f);
             newRandomRay = glm::normalize(newRandomRay);
 
-            material_t mat = scene->getMaterials()[rayhit.hit.geomID];
+            // LogInfo("Drawing ray to object: " + std::to_string(rayhit.hit.instID[0]));
+
+            material_t mat = scene->getMaterialForObject(rayhit.hit.instID[0]);
 
             if(glm::dot(newRandomRay, n) > 0)
                 return mat.Color * 0.8f  * FollowRay(hitPos, newRandomRay, scene, depth - 1);
@@ -53,10 +55,16 @@ namespace CandlelightRTC {
 
     int SAMPLE_COUNT = 100; 
     int DEPTH = 10;
-    std::map<std::pair<int,int>, std::mutex> locks;
+    std::mutex counterLock;
+
+    int activeWorkers = 0;
 
     void SceneDrawer::CalculateSample(int row, ScenePtr scene, int screenWidth, int screenHeight, glm::vec3 origin, colorrgba_v_t *colorRow){
         
+        counterLock.lock();
+        activeWorkers++;
+        counterLock.unlock();
+
         for(int j = 0; j<screenWidth; j++){
             colorRow[j] = glm::vec3(0);
 
@@ -80,6 +88,10 @@ namespace CandlelightRTC {
                 colorRow[j] += FollowRay(origin, rayDir, scene, DEPTH);
             }
         }
+
+        counterLock.lock();
+        activeWorkers--;
+        counterLock.unlock();
     }
 
     void SceneDrawer::Setup(GLDrawer *drawer)
@@ -87,7 +99,7 @@ namespace CandlelightRTC {
         m_Drawer = drawer;
     }
 
-    void SceneDrawer::DrawScene(ScenePtr scene, int screenWidth, int screenHeight, int sampleCount, int depth)
+    void SceneDrawer::DrawScene(ScenePtr scene, int screenWidth, int screenHeight, int sampleCount, int depth, int maxJobsCount)
     {
         SAMPLE_COUNT = sampleCount;
         DEPTH = depth;
@@ -99,6 +111,7 @@ namespace CandlelightRTC {
 
         std::vector<std::thread> workers;
 
+        activeWorkers = 0;
 
         colorrgba_v_t *color[screenHeight];
 
@@ -112,6 +125,10 @@ namespace CandlelightRTC {
                     CalculateSample, i, scene, screenWidth, screenHeight, positionToRenderFrom, color[i]
                 )
             );
+
+            // wait until we can create more workers
+            while(activeWorkers >= maxJobsCount)
+                ;
         }
 
         for(int i = 0; i<workers.size(); i++)

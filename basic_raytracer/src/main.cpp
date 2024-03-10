@@ -18,6 +18,8 @@
 int WINDOW_HEIGHT = 160;
 int WINDOW_WIDTH = 160;
 
+int MAX_JOB_COUNT = 100;
+
 CandlelightRTC::GLDrawer *drawer;
 
 bool PRODUCE_IMAGE = false;
@@ -33,16 +35,17 @@ void print_usage(){
     std::cout << "basictraycer [OPTIONS]" << std::endl;
 
     std::vector<std::pair<std::string, std::string>> options {
-        {"-i  --image", "Render a still frame to a png image render.png."},
-        {"-wd --width", "Set window width, default: 160."},
-        {"-ht --height", "Set window height, default: 160."},
-        {"-h  --help", "Print the program usage."},
-        {"-sn --sample-count", "Set the raytracer sample count per pixel."},
-        {"-d  --depth", "Set how many ray bounces per ray are accounted for during rendering."}
+        {"-i  --image        ", "Render a still frame to a png image render.png."},
+        {"-wd --width        [N]", "Set window width, default: 160."},
+        {"-ht --height       [N]", "Set window height, default: 160."},
+        {"-h  --help         ", "Print the program usage."},
+        {"-sn --sample-count [N]", "Set the raytracer sample count per pixel."},
+        {"-d  --depth        [N]", "Set how many ray bounces per ray are accounted for during rendering."},
+        {"-j  --jobs         [N]", "Allow N jobs to run at once when rendering"}
     };
 
     for(auto x : options){
-        std::cout <<  "\t" <<std::setw(25) << std::left << x.first;
+        std::cout <<  "\t" <<std::setw(32) << std::left << x.first;
         std::cout << x.second << std::endl;
     }
 
@@ -75,6 +78,9 @@ int main(int argc, char **argv)
             sampleCount = std::stoi(argv[i+1]);
         else if(!strcmp(argv[i], "-d") || !strcmp(argv[i], "--depth"))
             rayDepth = std::stoi(argv[i+1]);
+        else if(!strcmp(argv[i], "-j") || !strcmp(argv[i], "--jobs"))
+            MAX_JOB_COUNT = std::stoi(argv[i+1]);
+
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -149,7 +155,7 @@ int main(int argc, char **argv)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        sceneDrawer.DrawScene(scene, WINDOW_WIDTH, WINDOW_HEIGHT, sampleCount, rayDepth);
+        sceneDrawer.DrawScene(scene, WINDOW_WIDTH, WINDOW_HEIGHT, sampleCount, rayDepth, MAX_JOB_COUNT);
         // scene.DrawScene(WINDOW_WIDTH, WINDOW_HEIGHT);
 
         if(PRODUCE_IMAGE){
