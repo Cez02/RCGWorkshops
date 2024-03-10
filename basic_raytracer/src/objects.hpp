@@ -1,17 +1,19 @@
 #pragma once
 
 #include <embree3/rtcore.h>
+
 #include <memory>
 
 #include "transform.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "material.hpp"
 
 namespace CandlelightRTC {
 
     class PObject {
     private:
-        MeshPtr m_Mesh;
+        ModelPtr m_Model;
         transform_t m_Transform;
         material_t m_Material;
 
@@ -19,7 +21,7 @@ namespace CandlelightRTC {
 
     public:
         transform_t &getTransform();
-        MeshPtr &getMesh();
+        ModelPtr &getModel();
         material_t &getMaterial();
         u_int &getInstanceID();
     };

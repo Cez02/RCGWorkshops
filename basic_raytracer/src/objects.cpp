@@ -6,9 +6,9 @@ namespace CandlelightRTC {
         return m_Transform;
     }
 
-    MeshPtr &PObject::getMesh()
+    ModelPtr &PObject::getModel()
     {
-        return m_Mesh;
+        return m_Model;
     }
 
     material_t &PObject::getMaterial()
