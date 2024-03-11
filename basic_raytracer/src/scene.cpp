@@ -24,11 +24,19 @@ namespace CandlelightRTC {
         CandlelightRTC::LogInfo("Creating objects");
 
 
-        PObjectPtr newObject = std::make_shared<PObject>();
-        newObject->getModel() = Model::GetSphereModel(rtcDevice);
-        newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
-        newObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
-        newObject->getInstanceID() = 1;
+        // PObjectPtr newObject = std::make_shared<PObject>();
+        // newObject->getModel() = Model::GetSphereModel(rtcDevice);
+        // newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
+        // newObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        // newObject->getInstanceID() = 1;
+
+        PObjectPtr modelObject = std::make_shared<PObject>();
+        modelObject->getModel() = std::make_shared<Model>();
+        modelObject->getModel()->LoadModel("backpack/backpack.obj", rtcDevice);
+        modelObject->getTransform().Position = glm::vec3(0, 0, 6.0f);
+        modelObject->getTransform().Rotation = glm::quat(glm::vec3(glm::radians(-30.0f), glm::radians(130.0f), 0));
+        modelObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        modelObject->getInstanceID() = 2;
 
         // PObjectPtr newObject2 = std::make_shared<PObject>();
         // newObject2->getModel() = Model::GetSphereModel(rtcDevice);
@@ -47,11 +55,9 @@ namespace CandlelightRTC {
         CandlelightRTC::LogInfo("Attaching geometry and comitting...");
 
 
-        AttachObject(newObject);
-        // AttachObject(newObject2);
+        // AttachObject(newObject);
+        AttachObject(modelObject);
         // AttachObject(ground);
-
-
 
 
         // created instanced geom
@@ -72,7 +78,7 @@ namespace CandlelightRTC {
 
                 CandlelightRTC::LogInfo("Attaching instance: " + std::to_string(m_ObjectsInScene[i]->getInstanceID()));
 
-                rtcAttachGeometryByID(m_RTCScene, geom, m_ObjectsInScene[i]->getInstanceID());
+                rtcAttachGeometryByID(m_RTCScene, geom, j);
                 rtcReleaseGeometry(geom);
 
                 m_ObjectsInSceneMap[m_ObjectsInScene[i]->getInstanceID()] = m_ObjectsInScene[i];

@@ -40,7 +40,9 @@ namespace CandlelightRTC {
 
             // LogInfo("Drawing ray to object: " + std::to_string(rayhit.hit.instID[0]));
 
-            material_t mat = scene->getMaterialForObject(rayhit.hit.instID[0]);
+            // material_t mat = scene->getMaterialForObject(rayhit.hit.instID[0]);
+            material_t mat;
+            mat.Color = glm::vec3(1, 1, 1);
 
             if(glm::dot(newRandomRay, n) > 0)
                 return mat.Color * 0.8f  * FollowRay(hitPos, newRandomRay, scene, depth - 1);

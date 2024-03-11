@@ -18,7 +18,6 @@ namespace CandlelightRTC {
             aiProcess_JoinIdenticalVertices | 
             aiProcess_Triangulate | 
             aiProcess_GenNormals |
-            aiProcess_MakeLeftHanded |
             aiProcess_GenUVCoords );	
                     // std::cout << "Loaded" << std::endl;
 
