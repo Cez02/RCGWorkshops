@@ -8,6 +8,7 @@ find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(embree 3 REQUIRED)
+find_package(assimp REQUIRED)
 
 target_compile_definitions(basicraytracer
     PUBLIC
@@ -22,4 +23,5 @@ target_link_libraries(basicraytracer
         glm::glm
         glad
         stb_image
+        assimp
 )

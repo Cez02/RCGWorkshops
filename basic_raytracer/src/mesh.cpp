@@ -1,10 +1,13 @@
 #include "mesh.hpp"
 
 #include <vector>
+#include <map>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/string_cast.hpp>
+
+
 
 #include <cstring>
 
@@ -28,6 +31,8 @@ namespace CandlelightRTC {
 
     static MeshPtr SPHERE_MESH = nullptr;
     static MeshPtr PLANE_MESH = nullptr;
+
+    static std::map<std::string, MeshPtr> IMPORTED_MESHES;
 
     std::shared_ptr<Mesh> Mesh::getSphereMesh(RTCDevice &device)
     {
@@ -180,9 +185,14 @@ namespace CandlelightRTC {
         return PLANE_MESH;
     }
 
-    std::shared_ptr<Mesh> Mesh::getMeshFromFile(RTCDevice &device, std::string modelName)
+    std::shared_ptr<Mesh> Mesh::getMeshFromFile(RTCDevice & device, std::string modelName)
     {
-        return std::shared_ptr<Mesh>();
+        if(IMPORTED_MESHES.count(modelName) > 0)
+            return IMPORTED_MESHES[modelName];
+
+
+        
+
     }
 
     void Mesh::ApplyTransform(transform_t transform){

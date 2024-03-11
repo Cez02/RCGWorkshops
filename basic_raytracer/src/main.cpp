@@ -120,7 +120,7 @@ int main(int argc, char **argv)
 
     CandlelightRTC::LogInfo("Setting up scene...");
 
-    RTCDevice device = rtcNewDevice(NULL);
+    RTCDevice device = rtcNewDevice("verbose=3");
     rtcSetDeviceErrorFunction(device, errorFunction, NULL);
 
     CandlelightRTC::ScenePtr scene = new CandlelightRTC::Scene();

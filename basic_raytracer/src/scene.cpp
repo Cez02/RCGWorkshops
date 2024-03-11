@@ -3,10 +3,10 @@
 #include "mesh.hpp"
 #include "camera.hpp"
 #include "logger.hpp"
+#include "model.hpp"
 
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 
 namespace CandlelightRTC {
 
@@ -24,34 +24,40 @@ namespace CandlelightRTC {
         CandlelightRTC::LogInfo("Creating objects");
 
 
-        PObjectPtr newObject = std::make_shared<PObject>();
-        newObject->getMesh() = Mesh::getSphereMesh(rtcDevice);
-        newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
-        newObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
-        newObject->getInstanceID() = 1;
+        // PObjectPtr newObject = std::make_shared<PObject>();
+        // newObject->getModel() = Model::GetSphereModel(rtcDevice);
+        // newObject->getTransform().Position = glm::vec3(-0.8f, 0.8f, -0.5f);
+        // newObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        // newObject->getInstanceID() = 1;
 
-        PObjectPtr newObject2 = std::make_shared<PObject>();
-        newObject2->getMesh() = Mesh::getSphereMesh(rtcDevice);
-        newObject2->getTransform().Position = glm::vec3(0.8f, 0.8f, -1.5f);
-        newObject2->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 1.0, 0.4));
-        newObject2->getInstanceID() = 2;
+        PObjectPtr modelObject = std::make_shared<PObject>();
+        modelObject->getModel() = std::make_shared<Model>();
+        modelObject->getModel()->LoadModel("backpack/backpack.obj", rtcDevice);
+        modelObject->getTransform().Position = glm::vec3(0, 0, 6.0f);
+        modelObject->getTransform().Rotation = glm::quat(glm::vec3(glm::radians(-30.0f), glm::radians(130.0f), 0));
+        modelObject->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(1, 1, 1));
+        modelObject->getInstanceID() = 2;
 
-        PObjectPtr ground = std::make_shared<PObject>();
-        ground->getMesh() = Mesh::getPlaneMesh(rtcDevice);
-        ground->getTransform().Position = glm::vec3(0, 0, 0);
-        ground->getTransform().Scale *= 6;
-        ground->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.7, 0.7));
-        ground->getInstanceID() = 3;
+        // PObjectPtr newObject2 = std::make_shared<PObject>();
+        // newObject2->getModel() = Model::GetSphereModel(rtcDevice);
+        // newObject2->getTransform().Position = glm::vec3(0.8f, 0.8f, -1.5f);
+        // newObject2->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.4, 1.0, 0.4));
+        // newObject2->getInstanceID() = 2;
+
+        // PObjectPtr ground = std::make_shared<PObject>();
+        // ground->getModel() = Model::GetPlaneModel(rtcDevice);
+        // ground->getTransform().Position = glm::vec3(0, 0, 0);
+        // ground->getTransform().Scale *= 6;
+        // ground->getMaterial() = material_t(materialtype_t::DIFFUSE, glm::vec3(0.7, 0.7, 0.7));
+        // ground->getInstanceID() = 3;
 
 
         CandlelightRTC::LogInfo("Attaching geometry and comitting...");
 
 
-        AttachObject(newObject);
-        AttachObject(newObject2);
-        AttachObject(ground);
-
-
+        // AttachObject(newObject);
+        AttachObject(modelObject);
+        // AttachObject(ground);
 
 
         // created instanced geom
@@ -60,21 +66,23 @@ namespace CandlelightRTC {
             // attach instance
             auto transMat = m_ObjectsInScene[i]->getTransform().toMat4();
 
-            RTCGeometry geom = rtcNewGeometry(rtcDevice, RTC_GEOMETRY_TYPE_INSTANCE);
-            rtcSetGeometryInstancedScene(geom, m_ObjectsInScene[i]->getMesh()->getRTCScene());
-            rtcSetGeometryTimeStepCount(geom, 1);
-            rtcSetGeometryTransform(geom,
-                                    0,
-                                    RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
-                                    glm::value_ptr(transMat));
-            rtcCommitGeometry(geom);
+            for(int j = 0; j<m_ObjectsInScene[i]->getModel()->getMeshes().size(); j++){
+                RTCGeometry geom = rtcNewGeometry(rtcDevice, RTC_GEOMETRY_TYPE_INSTANCE);
+                rtcSetGeometryInstancedScene(geom, m_ObjectsInScene[i]->getModel()->getMeshes()[j]->getRTCScene());
+                rtcSetGeometryTimeStepCount(geom, 1);
+                rtcSetGeometryTransform(geom,
+                                        0,
+                                        RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
+                                        glm::value_ptr(transMat));
+                rtcCommitGeometry(geom);
 
-            CandlelightRTC::LogInfo("Attaching instance: " + std::to_string(m_ObjectsInScene[i]->getInstanceID()));
+                CandlelightRTC::LogInfo("Attaching instance: " + std::to_string(m_ObjectsInScene[i]->getInstanceID()));
 
-            rtcAttachGeometryByID(m_RTCScene, geom, m_ObjectsInScene[i]->getInstanceID());
-            rtcReleaseGeometry(geom);
+                rtcAttachGeometryByID(m_RTCScene, geom, j);
+                rtcReleaseGeometry(geom);
 
-            m_ObjectsInSceneMap[m_ObjectsInScene[i]->getInstanceID()] = m_ObjectsInScene[i];
+                m_ObjectsInSceneMap[m_ObjectsInScene[i]->getInstanceID()] = m_ObjectsInScene[i];
+            }
         }
 
 
@@ -94,8 +102,13 @@ namespace CandlelightRTC {
         rayhit.hit.geomID = RTC_INVALID_GEOMETRY_ID;
         rayhit.hit.instID[0] = RTC_INVALID_GEOMETRY_ID;
 
+        CandlelightRTC::LogInfo("Creating context");
         RTCIntersectContext context;
         rtcInitIntersectContext(&context);
+
+        // LogInfo("Rayhit instance: " + std::to_string(context.instStackSize));
+
+        CandlelightRTC::LogInfo("Shooting ray");
 
         rtcIntersect1(m_RTCScene, &context, &rayhit);
 
