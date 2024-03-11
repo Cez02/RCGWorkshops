@@ -7,8 +7,8 @@ set_property(TARGET basicraytracer PROPERTY CXX_STANDARD 17)
 find_package(glfw3 3.3 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
-find_package(embree 3 REQUIRED)
-find_package(assimp REQUIRED)
+find_package(embree 3 CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 
 target_compile_definitions(basicraytracer
     PUBLIC
