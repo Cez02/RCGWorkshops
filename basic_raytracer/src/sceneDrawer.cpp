@@ -45,13 +45,14 @@ namespace CandlelightRTC {
             mat.Color = glm::vec3(1, 1, 1);
 
             if(glm::dot(newRandomRay, n) > 0)
-                return mat.Color * 0.8f  * FollowRay(hitPos, newRandomRay, scene, depth - 1);
+                return mat.Color * 0.9f  * FollowRay(hitPos, newRandomRay, scene, depth - 1);
             else
-                return mat.Color * 0.8f  * FollowRay(hitPos, -newRandomRay, scene, depth - 1);
+                return mat.Color * 0.9f  * FollowRay(hitPos, -newRandomRay, scene, depth - 1);
         }
         else {
-            float a = 0.5*(-direction.y + 1.0);
-            return (1.0f-a)*colorrgba_v_t(1.0, 1.0, 1.0) + a*colorrgba_v_t(0.5, 0.7, 1.0);
+            return colorrgba_v_t(0.9, 0.9, 0.93);
+            // float a = 0.5*(-direction.y + 1.0);
+            // return (1.0f-a)*colorrgba_v_t(1.0, 1.0, 1.0) + a*colorrgba_v_t(0.5, 0.7, 1.0);
         }
     }
 

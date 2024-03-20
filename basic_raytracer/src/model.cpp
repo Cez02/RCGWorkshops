@@ -18,6 +18,7 @@ namespace CandlelightRTC {
             aiProcess_JoinIdenticalVertices | 
             aiProcess_Triangulate | 
             aiProcess_GenNormals |
+            aiProcess_ForceGenNormals |
             aiProcess_GenUVCoords );	
                     // std::cout << "Loaded" << std::endl;
 
@@ -29,12 +30,32 @@ namespace CandlelightRTC {
 
         // directory = path.substr(0, path.find_last_of('/'));
 
-        // std::cout << "Processing nodes" << std::endl;
         processNode(scene->mRootNode, scene, device);
-        // std::cout << "Done processing nodes" << std::endl;
 
 
+        // normalize mesh
 
+        glm::vec3 furtherVertex = glm::vec3(0, 0, 0);
+
+        for(int i = 0; i<m_Meshes.size(); i++){
+            for(int j = 0; j<m_Meshes[i]->getVertexCount(); j++){
+                if(glm::length(glm::vec3(m_Meshes[i]->getVertices()[3*j], m_Meshes[i]->getVertices()[3*j + 1], m_Meshes[i]->getVertices()[3*j + 2])) > glm::length(furtherVertex)){
+                    furtherVertex = glm::vec3(m_Meshes[i]->getVertices()[3*j], m_Meshes[i]->getVertices()[3*j + 1], m_Meshes[i]->getVertices()[3*j + 2]);
+                }
+            }
+        }
+
+        float maxDistance = glm::length(furtherVertex);
+
+        LogInfo("Longest distance: " + std::to_string(maxDistance));
+
+        for(int i = 0; i<m_Meshes.size(); i++){
+            for(int j = 0; j<m_Meshes[i]->getVertexCount(); j++){
+                m_Meshes[i]->getVertices()[3*j] /= maxDistance;
+                m_Meshes[i]->getVertices()[3*j + 1] /= maxDistance;
+                m_Meshes[i]->getVertices()[3*j + 2] /= maxDistance;
+            }
+        }        
 
         // Go over added meshes and create a parent rtcScene
 
@@ -182,6 +203,9 @@ namespace CandlelightRTC {
         newMesh->getIndices() = (uintPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_INDEX, 0, RTC_FORMAT_UINT3, 3*sizeof(u_int), indices.size() / 3);
         memcpy(newMesh->getIndices(), indices.data(), indices.size() * sizeof(u_int));
+
+        newMesh->getIndexCount() = indices.size();
+        newMesh->getVertexCount() = vertices.size() / 3;
 
         newMesh->getVertices() = (floatPtr)rtcSetNewGeometryBuffer(geo,
             RTC_BUFFER_TYPE_VERTEX, 0, RTC_FORMAT_FLOAT3, 3*sizeof(float), vertices.size() / 3);

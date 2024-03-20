@@ -22,6 +22,9 @@ namespace CandlelightRTC {
         uintPtr &getIndices();
         RTCScene &getRTCScene();
 
+        int &getVertexCount();
+        int &getIndexCount();
+
         void ApplyTransform(transform_t transform);
 
         static std::shared_ptr<Mesh> getSphereMesh(RTCDevice &device);

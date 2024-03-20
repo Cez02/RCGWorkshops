@@ -27,7 +27,7 @@ namespace CandlelightRTC {
         void AttachObject(PObjectPtr obj);
 
     public:
-        void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera);
+        void Setup(RTCDevice rtcDevice, GLDrawer *drawer, Camera camera, std::string modelPath);
 
         Camera &getCamera();
         RTCScene &getRTCScene();

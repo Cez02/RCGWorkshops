@@ -8,6 +8,7 @@
 #include "scene.hpp"
 #include "sceneDrawer.hpp"
 
+#include <glm/gtx/string_cast.hpp>
 #include <GLFW/glfw3.h>
 #include <cstring>
 #include <iomanip>
@@ -41,7 +42,10 @@ void print_usage(){
         {"-h  --help         ", "Print the program usage."},
         {"-sn --sample-count [N]", "Set the raytracer sample count per pixel."},
         {"-d  --depth        [N]", "Set how many ray bounces per ray are accounted for during rendering."},
-        {"-j  --jobs         [N]", "Allow N jobs to run at once when rendering"}
+        {"-j  --jobs         [N]", "Allow N jobs to run at once when rendering"},
+        {"-cp --camera-pos   [x] [y] [z]", "Set the camera position to (x,y,z)"},
+        {"-cr --camera-rot   [x] [y] [z]", "Set the camera rotation to (x,y,z) (euler)"},
+        {"-m  --model        [PATH]", "Load a Wavefront OBJ model in given PATH"}
     };
 
     for(auto x : options){
@@ -57,6 +61,16 @@ int main(int argc, char **argv)
     srand(time(0));
 
     GLFWwindow* window;
+
+    CandlelightRTC::transform_t initCamera = CandlelightRTC::transform_t(
+        glm::vec3(0, 1.5f, 0),
+        glm::vec3(1, 1, 1),
+        glm::quat(glm::vec3(0, 0, 0))
+    );
+    float rot = 0;
+
+
+    std::string objModelPath = "./bedroom/bed_room.obj";
 
     /* Initialize the library */
     if (!glfwInit())
@@ -80,7 +94,12 @@ int main(int argc, char **argv)
             rayDepth = std::stoi(argv[i+1]);
         else if(!strcmp(argv[i], "-j") || !strcmp(argv[i], "--jobs"))
             MAX_JOB_COUNT = std::stoi(argv[i+1]);
-
+        else if(!strcmp(argv[i], "-cp") || !strcmp(argv[i], "--camera-pos"))
+            initCamera.Position = glm::vec3(std::stof(argv[i+1]), std::stof(argv[i+2]), std::stof(argv[i+3]));
+        else if(!strcmp(argv[i], "-cr") || !strcmp(argv[i], "--camera-rot"))
+            initCamera.Rotation = glm::quat(glm::vec3(glm::radians(std::stof(argv[i+1])), rot = glm::radians(std::stof(argv[i+2])), glm::radians(std::stof(argv[i+3]))));
+        else if(!strcmp(argv[i], "-m") || !strcmp(argv[i], "--model"))
+            objModelPath = std::string(argv[i+1]);
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -130,15 +149,11 @@ int main(int argc, char **argv)
     camera.getAspectRatio() = WINDOW_WIDTH / WINDOW_HEIGHT;
     camera.getMaxRayDistance() = std::numeric_limits<float>::infinity();
     camera.getNearPlaneDistance() = 1;
-    camera.getTransform() = CandlelightRTC::transform_t(
-        glm::vec3(0, 1.5f, 0),
-        glm::vec3(1, 1, 1),
-        glm::quat(glm::vec3(glm::radians(15.0f), 0, 0))
-    );
+    camera.getTransform() = initCamera;
 
     CandlelightRTC::LogInfo("Creating scene object...");
 
-    scene->Setup(device, drawer, camera);
+    scene->Setup(device, drawer, camera, objModelPath);
     sceneDrawer.Setup(drawer);
 
     CandlelightRTC::LogInfo("Begin drawing...");
@@ -167,6 +182,8 @@ int main(int argc, char **argv)
         glfwSwapBuffers(window);
         glfwPollEvents();
 
+        CandlelightRTC::LogInfo("Camera position: " + glm::to_string(scene->getCamera().getTransform().Position));
+        CandlelightRTC::LogInfo("Camera rotation: " + glm::to_string(glm::eulerAngles(scene->getCamera().getTransform().Rotation)));
 
         // input
 
@@ -176,14 +193,25 @@ int main(int argc, char **argv)
             scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Right() * cameraSpeed * deltaTime;
 
         if(glfwGetKey(window, GLFW_KEY_W))
-            scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
-        if(glfwGetKey(window, GLFW_KEY_S))
             scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
+        if(glfwGetKey(window, GLFW_KEY_S))
+            scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Forward() * cameraSpeed * deltaTime;
 
+        if(glfwGetKey(window, GLFW_KEY_SPACE))
+            scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Up() * cameraSpeed * deltaTime;
         if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
             scene->getCamera().getTransform().Position += -scene->getCamera().getTransform().Up() * cameraSpeed * deltaTime;
-        if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL))
-            scene->getCamera().getTransform().Position += scene->getCamera().getTransform().Up() * cameraSpeed * deltaTime;
+
+        if(glfwGetKey(window, GLFW_KEY_E))
+            rot += 1 * deltaTime;
+        if(glfwGetKey(window, GLFW_KEY_Q))
+            rot -= 1 * deltaTime;
+
+        // adjust camera rotation
+        auto eulerAng = glm::vec3(0, rot, 0);
+
+        scene->getCamera().getTransform().Rotation = glm::quat(eulerAng);
+
 
         deltaTime = ((float)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - timeLastFrame).count() / 1000.0f);
         CandlelightRTC::LogInfo("FPS: " + std::to_string(1.0f / deltaTime));

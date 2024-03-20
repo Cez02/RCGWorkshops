@@ -15,6 +15,9 @@ target_compile_definitions(basicraytracer
         GLM_ENABLE_EXPERIMENTAL
 )
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/models
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 target_link_libraries(basicraytracer
     PRIVATE
         glfw

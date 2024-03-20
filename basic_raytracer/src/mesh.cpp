@@ -185,6 +185,15 @@ namespace CandlelightRTC {
         return PLANE_MESH;
     }
 
+    int &Mesh::getVertexCount(){
+        return m_VertexCount;
+    }
+
+    int &Mesh::getIndexCount(){
+        return m_IndexCount;
+    }
+
+
     std::shared_ptr<Mesh> Mesh::getMeshFromFile(RTCDevice & device, std::string modelName)
     {
         if(IMPORTED_MESHES.count(modelName) > 0)
